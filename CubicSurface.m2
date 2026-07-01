@@ -239,7 +239,7 @@ pentagonForms = P -> (
 )
 
 end
-needs "Good.m2"
+needs "CubicSurface.m2"
 
 -- compute the equation of the cubic surface
 cubicBasis = matrix {basisOfCubics P}
@@ -259,7 +259,7 @@ pForms = pentagonForms(P);
 -- here we use only the quadrilaterals
 randomPts = for i from 1 to 110 list(
 
-    paramVals := matrix {apply(gens R, i -> random(ZZ/nextPrime(100000)))};
+    paramVals := matrix {apply(gens R, i -> random(ZZ/nextPrime(10000000)))};
     sub(cubicBasis, paramVals)
 );
 
@@ -271,7 +271,8 @@ T = QQ[x_1..x_(numcols qForms)];
 BQ = support(basis(1, T) % (ideal(basis(1, T)*sub(K, QQ)))) / index;
 basisForms = sub(qForms_BQ, frac S);
 
--- compute the log canonical embedding of the cubic surface 
+
+-- compute the log canonical embedding of the cubic surface without its 27 lines
 use S
 df = homogenize(diff(y_3, sub(I_0, y_0 => 1)), y_0)
 scaledBasisForms = (1/df)*basisForms;
@@ -282,7 +283,7 @@ B = basis(2, Z);
 
 randomPts = for i from 1 to numcols(B) list(
 
-    paramVals := matrix {apply(gens R, i -> random(ZZ/nextPrime(1000000)))};
+    paramVals := matrix {apply(gens R, i -> random(ZZ/nextPrime(10000000)))};
     cubicSurfacePt := sub(cubicBasis, paramVals);
     imVals := sub(scaledBasisForms, cubicSurfacePt)
 );
