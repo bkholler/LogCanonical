@@ -78,7 +78,7 @@ function residual_points(P::Polyhedron)
     H = hyperplanes(M)
 
     # find all the residual points
-    res_pts = []
+    res_pts = Dict()
     
     for h in H 
 
@@ -88,11 +88,26 @@ function residual_points(P::Polyhedron)
         
         if !(pt in P)
             pt = nullspace(F[h, :])[2]
-            push!(res_pts, [pt[i, 1] for i in 1:n+1])
+            p = [pt[i, 1] for i in 1:n+1]
+            res_pts[p] = order(P, x)
         end
     end
 
     return res_pts
+end
+
+
+function order(P::Polyhedron, x::Vector{QQFieldElem})
+
+    n = ambient_dim(P)
+    containing_hyperplanes = filter(f -> ((f.a)*x)[1] == f.b, facets(P))
+
+
+    if x in P
+        return length(containing_hyperplanes) - n
+    else
+        return length(containing_hyperplanes) - n + 1
+    end
 end
 
 
