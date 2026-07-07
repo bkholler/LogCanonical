@@ -69,37 +69,42 @@ function residual_points(P::Polyhedron)
 
     # extract ineqs from polytope
     for f in facets(P)
-        push!(F, hcat(-1*(f.a), matrix([f.b])))
+        push!(F, hcat((f.a), matrix([-f.b])))
     end
 
-    # compute hyperplanes of the matroid
+    # switch to homogeneous coordinates in the polytope
     F = reduce(vcat, F)
+    homP = polyhedron(F, [0 for i in 1:n_facets(P)])
+
+    # compute the hyperplanes of the matroid on the facet normals
     M = matroid_from_matrix_rows(F)
     H = hyperplanes(M)
 
     # find all the residual points
+    # store them in a dictionary whose keys are their orders
     res_pts = Dict()
     
     for h in H 
 
         # compute the corresponding intersection points
-        pt = (F[h, 1:n])^(-1)*(-F[h, n+1])
+        hom_pt = nullspace(F[h, :])[2]
+        p = [hom_pt[i, 1] for i in 1:n+1]
         
-        
-        if !(pt in P)
-            pt = nullspace(F[h, :])[2]
-            p = [pt[i, 1] for i in 1:n+1]
-            res_pts[p] = order(P, x)
-        end
+        res_pts[p] = order(homP, p, is_projective = true)
     end
 
     return res_pts
 end
 
 
-function order(P::Polyhedron, x::Vector{QQFieldElem})
+function order(P::Polyhedron, x::Vector ; is_projective = false)
 
-    n = ambient_dim(P)
+    if is_projective
+        n = ambient_dim(P) - 1
+    else
+        n = ambient_dim(P)
+    end
+
     containing_hyperplanes = filter(f -> ((f.a)*x)[1] == f.b, facets(P))
 
 
@@ -177,19 +182,8 @@ function canonical_form(P::Polyhedron)
 
     n = ambient_dim(P)
     R, x = graded_polynomial_ring(QQ, "x" => 1:n+1)
-    F = []
-
-    # extract ineqs from polytope
-    for f in facets(P)
-        push!(F, hcat(-1*(f.a), matrix([f.b])))
-    end
-
-    F = reduce(vcat, F)
-    B = gens(R)
-
-    denom = prod(F*B)
-
-    return adjoint(P, R)//denom
+    
+    return canonical_form(P, R)
 end
 
 
