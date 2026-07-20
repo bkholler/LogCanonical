@@ -6,11 +6,11 @@ include("HyperplaneArrangements.jl")
 A = [
     [1, 0],
     [0, 1],
-    [1, -1],
-    [1, 1],
-    [3, 1]
+    [-2, -3],
+    [-1, -2],
+    [-5, -7]
 ]
-b = [0, 0, 3, -4, -3] 
+b = [0, 0, -1, -1, -3] 
 
 
 # compute all regions and visualize them.
@@ -18,14 +18,16 @@ all_regs = all_regions(A, b)
 visualize(all_regs)
 
 
-# only the bounded regions
+# compute only the bounded regions
 bd_regs = bounded_regions(A, b)
 visualize(bd_regs)
 
 
 # compute the canonical form of a single polytope 
-reg = bd_regs[5]
-canonical_form(reg)
+forms = map(canonical_form, bd_regs)
+forms[2]
+factor(denominator((forms[2])))
+
 
 
 # compute the parametrization of the log canonical model via canonical forms
