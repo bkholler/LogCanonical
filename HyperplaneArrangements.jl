@@ -116,6 +116,35 @@ function order(P::Polyhedron, x::Vector ; is_projective = false)
 end
 
 
+# build the matrix of linear conditions on the coefficients of a polynomial 
+# which vanishes to the specified order on the residual 
+function residual_linear_conditions(B::Vector{<:MPolyRingElem}, res_pts::Dict, R::MPolyDecRing)
+
+    rows = Vector{QQFieldElem}[]
+
+    for (p, k) in res_pts
+        for t in 0:(k - 1)
+            for m in monomial_basis(R, t)
+
+                alpha = exponent_vector(m, 1)
+
+                row = QQFieldElem[]
+                for f in B
+                    g = f
+                    for i in 1:length(alpha), _ in 1:alpha[i]
+                        g = derivative(g, gen(R, i))
+                    end
+                    push!(row, evaluate(g, p))
+                end
+                push!(rows, row)
+            end
+        end
+    end
+
+    return matrix(QQ, rows)
+end
+
+
 # compute the adjoint of a polyhedron
 # later make R an optional argument
 function adjoint(P::Polyhedron, R::MPolyDecRing)
@@ -125,23 +154,31 @@ function adjoint(P::Polyhedron, R::MPolyDecRing)
     n = ambient_dim(P)
     r = n_facets(P)
 
-    if length(res_pts) == 0
+    if r == n+1
         return R(1)
     end
 
-    # interpolate the basis elements of the correct degree
+    # candidate monomial basis for the adjoint, degree r - n - 1
     B = monomial_basis(R, r - n - 1)
 
-    adj = eval_polys_at_pts(B, res_pts)[1]
+    # one linear condition per (point, multi-index) pair, enforcing that f
+    # and all its partials up to order k-1 vanish at each residual point
+    M = residual_linear_conditions(B, res_pts, R)
 
-    return adj
+    (d, N) = nullspace(M)
+
+    return (B * N)[1]
 end
 
 
 function adjoint(P::Polyhedron)
 
+    if is_bounded(P)
+        n = ambient_dim(P)
+    else 
+        n = ambient_dim(P) - 1
+    end
 
-    n = ambient_dim(P)
     R, x = graded_polynomial_ring(QQ, "x" => 1:n+1)
 
     return adjoint(P, R)
@@ -150,12 +187,15 @@ end
 
 # evaluate a list of polynomials at a list of points
 # the columns correspond to the polynomials and the 
-function eval_polys_at_pts(F, pts)
+function interpolate_polynomials(F, pts)
 
     M = matrix(QQ, [[evaluate(f, p) for f in F] for p in pts])
     (d, N) = nullspace(M)
     return F*N
 end
+
+
+# function 
 
 
 # computes the canonical form of the polytope by computing its adjoint
