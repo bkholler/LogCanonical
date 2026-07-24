@@ -257,15 +257,15 @@ pForms = pentagonForms(P);
 
 -- compute a basis for each set of canonical forms
 -- here we use only the quadrilaterals
-randomPts = for i from 1 to 110 list(
+randomPts = for i from 1 to 500 list(
 
-    paramVals := matrix {apply(gens R, i -> random(ZZ/nextPrime(10000000)))};
-    sub(cubicBasis, paramVals)
+    paramVals := matrix {apply(gens R, i -> random(-10, 10))};
+    sub(sub(cubicBasis, paramVals), QQ)
 );
 
 
 -- to compute a basis we simply sample random points and them compute the linear relations amongst the forms
-Mq = matrix for p in randomPts list flatten entries sub(qForms, p);
+Mq = matrix for p in randomPts list try flatten entries sub(qForms, p) else continue;
 K = gens ker Mq;
 T = QQ[x_1..x_(numcols qForms)];
 BQ = support(basis(1, T) % (ideal(basis(1, T)*sub(K, QQ)))) / index;
